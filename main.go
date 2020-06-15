@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,11 +46,7 @@ func main() {
 
 	r := gin.Default()
 
-	// r.GET("/ping", func(c *gin.Context) {
-	// 	c.JSON(200, gin.H{
-	// 		"message": "pong",
-	// 	})
-	// })
+	r.Use(static.Serve("/", static.LocalFile(".", true)))
 
 	r.PUT("/*upname", fileUploadHandler)
 	r.POST("/*upname", fileUploadHandler)
@@ -66,13 +63,14 @@ func fileUploadHandler(c *gin.Context) {
 	filename := ""
 	dst := ""
 	tmpDst := ""
+	tmpSuffix := strconv.FormatInt(time.Now().Unix(), 10) + ".tmp"
 
 	var err error = nil
 
 	if c.Request.Method == "PUT" {
 		filename = strings.TrimLeft(c.Request.RequestURI, "/")
 		dst = filepath.Join(dstDir, filename)
-		tmpDst = dst + strconv.FormatInt(time.Now().Unix(), 10) + ".tmp"
+		tmpDst = dst + tmpSuffix
 
 		out, err := os.Create(tmpDst)
 		if err == nil {
@@ -90,15 +88,17 @@ func fileUploadHandler(c *gin.Context) {
 		filename = file.Filename
 
 		dst = filepath.Join(dstDir, filename)
-		tmpDst = dst + strconv.FormatInt(time.Now().Unix(), 10) + ".tmp"
+		tmpDst = dst + tmpSuffix
 
 		// Upload the file to specific dst.
 		err = c.SaveUploadedFile(file, tmpDst)
 	}
 
 	defer func() {
-		if _, e := os.Stat(tmpDst); e == nil {
-			os.Remove(tmpDst)
+		if len(tmpDst) > 0 {
+			if _, e := os.Stat(tmpDst); e == nil {
+				os.Remove(tmpDst)
+			}
 		}
 	}()
 
