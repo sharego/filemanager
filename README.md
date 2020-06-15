@@ -14,3 +14,7 @@ or
 ## download
 
 `wget http://localhost:8090/filename`
+
+# Developer
+
+`go build -v .`
