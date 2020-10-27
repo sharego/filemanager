@@ -50,11 +50,13 @@ func main() {
 
 	r.PUT("/*upname", fileUploadHandler)
 	r.POST("/*upname", fileUploadHandler)
-	r.Static("/", ".")
 
 	fmt.Fprintf(os.Stdout, "Server: 0.0.0.0:%v\n", port)
-	r.Run("0.0.0.0:" + strconv.Itoa(port))
-
+	err := r.Run("0.0.0.0:" + strconv.Itoa(port))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Server Start failed: %v", err)
+		os.Exit(1)
+	}
 }
 
 func fileUploadHandler(c *gin.Context) {
